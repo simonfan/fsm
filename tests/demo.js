@@ -10,16 +10,25 @@ define(['fsm'], function(FSM) {
 		states: {
 			barking: {
 				pet: function() {
-					this.state = 'wagging_tail:fast';
+					this.set('wagging_tail:fast');
 
 					return this;
+				},
+
+
+				__enter:function() {
+					alert('start barking! ... au au au!')
+				},
+
+				__leave:function() {
+					alert('stop barking ...!au au au...')
 				},
 			},
 
 			'wagging_tail:*': {
 				wait: function(speed) {
 					console.log('I was wagging my tail at ' + speed + ' speed')
-					this.state = 'barking';
+					this.set('barking');
 
 					return this;
 				}

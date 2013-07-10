@@ -7,76 +7,88 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 	// all methods on fsm are called with the context of 
 	// the FSM instance object
 	// fsm is not accessible from outside! :D
-	var fsm = {};
+	var fsm = {
 
-	fsm.exec = function(methodName, args) {
+		exec: function(methodName, args) {
 
-		// retrieve the method
-		var methodExists = function(match) {
-				return typeof match.state[methodName] === 'function';
-			},
-			match = this.wildcards.retrieve(this.state, methodExists);
+			// retrieve the method
+			var methodExists = function(match) {
+					return typeof match.state[methodName] === 'function';
+				},
+				match = this._states.retrieve(this.state, methodExists);
 
-		if (match) {
-			var args = args || [];
-			args.unshift(match.token);
+			if (match) {
+				var args = args || [];
+				args.unshift(match.token);
+				
+				return match.state[methodName].apply(this, args);
+			} else {
+				return false;
+			}
+		},
 
-			console.log(args);
-			
-			return match.state[methodName].apply(this, args);
-		} else {
-			return false;
-		}
-	}
+		defineState: function(name, state) {
+			if (typeof name === 'string' && typeof state === 'object') {
+				// just one state
+				var _this = this,
+					_state = {};
 
-	fsm.defineState = function(name, state) {
-		if (typeof name === 'string' && typeof state === 'object') {
-			// just one state
-			return this.fsm('_defineState', name, state);
+				_.each(state, function(method, methodName) {
+					_state[ methodName ] = _this.fsm('_defineMethod', methodName, method);
+				});
 
-		} else if (typeof name === 'object') {
-			var _this = this;
+				// save the state object as a wildcard.
+				this._states.card( name, _state);
 
-			_.each(name, function(state, name) {
-				_this.fsm('defineState', name, state);
-			});
+				return this;
 
-		}
-	}
+			} else if (typeof name === 'object') {
+				var _this = this;
 
+				_.each(name, function(state, name) {
+					_this.fsm('defineState', name, state);
+				});
+			}
+		},
 
-	fsm._defineState = function(stateName, state) {
-		var _this = this,
-			_state = {};
-
-		_.each(state, function(method, name) {
-
-			// 1: bind the method to _this object
-			_state[ name ] = _.bind(method, _this);
+		_defineMethod: function(methodName, method) {
+			// 1: bind the method to this object
+			var method = _.bind(method, this);
 
 			// 2: create a method on the object with this method name,
 			// so that when it is called, we intercept it via .exec method
-			if (typeof _this[ name ] === 'undefined') {
+			if (typeof this[ methodName ] === 'undefined') {
 
-				_this[ name ] = _this._stateMethods[ name ] = function() {
+				this[ methodName ] = this._stateMethods[ methodName ] = function() {
 					var args = _.args(arguments);
-					return _this.fsm('exec', name, args);
+					return this.fsm('exec', methodName, args);
 				};
 
-			} else if ( !_this._stateMethods[ name ] ) {
-				throw new Error('FSM: the property "'+ name +'" is already defined in the object. Please give the method another name.');
+			} else if ( !this._stateMethods[ methodName ] ) {
+				throw new Error('FSM: the property "'+ methodName +'" is already defined in the object. Please give the method another name.');
 			}
-		});
 
-		// save the state object as a wildcard.
-		this.wildcards.card( stateName, _state);
+			return method;
+		},
 
-		return this;
-	}
+		set: function(state) {
+			if (state === this.state) {
+				return false;
+			} else {
+				// call __leave
+				if (typeof this.__leave === 'function') {
+					this.__leave();
+				}
 
+				this.state = state;
 
-	fsm.set = function(state) {
-		this.state = state;
+				// call __enter
+				if (typeof this.__enter === 'function') {
+					this.__enter();
+				}
+			}
+		},
+
 	}
 
 
@@ -86,18 +98,10 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 	var FSM = Object.create(Buildable);
 	FSM.extend(Eventemitter2.prototype, {
 		init: function(data) {
-			var _this = this,
-				_wildcards = [],
-				_methodNames = [];
+			var _this = this;
 
 			// bind the exec method to this object
 			_.bindAll(this, 'fsm');
-
-			// states hash
-			this._states = {};
-			// state-methods
-			this._stateMethods = {};
-
 
 			// build the wildcard machine
 			/*
@@ -110,7 +114,8 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 					context: undefined
 				}
 			*/
-			this.wildcards = Wildcards.build(_.defaults({
+			this._stateMethods = {};
+			this._states = Wildcards.build(_.defaults({
 				itemAlias: 'state',
 			// 	tokenAlias: 'token',
 			}, data.wildcardOptions));
@@ -123,9 +128,10 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 
 		exec: fsm.exec,
 
+		set: fsm.set,
+
 		fsm: function(fsm_method_name) {
-			var args = _.args(arguments);
-			args.shift();
+			var args = _.args(arguments, 1);
 
 			return fsm[ fsm_method_name ].apply(this, args);
 		}
