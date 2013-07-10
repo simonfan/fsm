@@ -89,16 +89,18 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 			if (state === this.state) {
 				return false;
 			} else {
+				var args = _.args(arguments, 1);
+
 				// call __leave
 				if (typeof this.__leave === 'function') {
-					this.__leave();
+					this.__leave.apply(this, args);
 				}
 
 				this.state = state;
 
 				// call __enter
 				if (typeof this.__enter === 'function') {
-					this.__enter();
+					this.__enter.apply(this, args);
 				}
 			}
 		},
