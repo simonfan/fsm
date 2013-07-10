@@ -18,8 +18,21 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 				match = this._states.retrieve(this.state, methodExists);
 
 			if (match) {
-				var args = args || [];
-				args.unshift(match.token);
+				var args = args || [],
+					token = match.token;
+
+				///////////////////////////////
+				/// SPECIAL METHOD: __token ///
+				///////////////////////////////
+				if (typeof match.state.__token === 'function') {
+					token = match.state.__token(token);
+				}
+
+				if (_.isArray(token)) {
+					args = token.concat(args);
+				} else {
+					args.unshift(token);
+				}
 				
 				return match.state[methodName].apply(this, args);
 			} else {

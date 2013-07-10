@@ -15,7 +15,6 @@ define(['fsm'], function(FSM) {
 					return this;
 				},
 
-
 				__enter:function() {
 					alert('start barking! ... au au au!')
 				},
@@ -31,19 +30,31 @@ define(['fsm'], function(FSM) {
 					this.set('barking');
 
 					return this;
+				},
+
+				__token: function(token) {
+					return token + 'PARSED!';
+				},
+
+				__enter: function() {
+					console.log('I started wagging my tail')
+				},
+
+				__leave: function() {
+					console.log('I stopped wagging my tail')
 				}
 			},
 
 			'wagging_tail:fast': {
 				pet: function() {
-					this.state = 'wagging_tail:slow';
+					this.set('wagging_tail:slow');
 					console.log(this.state);
 				},
 			},
 
 			'wagging_tail:slow': {
 				pet: function() {
-					this.state = 'sitting';
+					this.set('sitting');
 					console.log(this.state);
 				}
 			},
