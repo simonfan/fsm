@@ -5,7 +5,8 @@
     "underscore-amd": "latest",
     "requirejs": "latest",
     "buildable": "simonfan/buildable",
-    "eventemitter2": "~0.4.11"
+    "eventemitter2": "~0.4.11",
+    "wildcards": "simonfan/wildcards"
   },
   "main": "fsm.js"
 }

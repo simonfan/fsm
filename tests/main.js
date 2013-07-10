@@ -11,6 +11,7 @@ require.config({
 
 		'buildable': 'components/buildable/buildable',
 		'_.mixins': 'components/_.mixins/_.mixins',
+		'wildcards': 'components/wildcards/wildcards',
 
 		// the module files go here
 		'fsm': '../fsm',

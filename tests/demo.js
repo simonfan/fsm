@@ -10,17 +10,32 @@ define(['fsm'], function(FSM) {
 		states: {
 			barking: {
 				pet: function() {
-					this.state = 'wagging_tail';
+					this.state = 'wagging_tail:fast';
+
+					return this;
 				},
 			},
 
-			wagging_tail: {
+			'wagging_tail:*': {
+				wait: function(speed) {
+					console.log('I was wagging my tail at ' + speed + ' speed')
+					this.state = 'barking';
+
+					return this;
+				}
+			},
+
+			'wagging_tail:fast': {
+				pet: function() {
+					this.state = 'wagging_tail:slow';
+					console.log(this.state);
+				},
+			},
+
+			'wagging_tail:slow': {
 				pet: function() {
 					this.state = 'sitting';
-				},
-
-				wait: function() {
-					this.state = 'barking';
+					console.log(this.state);
 				}
 			},
 
@@ -29,13 +44,18 @@ define(['fsm'], function(FSM) {
 			},
 
 			'*': {
-				pet: function() {
-					console.log(this.name + ' is confused...');
+				pet: function(token, arg1) {
+					console.log(this.name + ' is confused... ' + token);
+					console.log('arg1: ', arg1)
 				},
 
-				squirrel: function() {
+				squirrel: function(token) {
 					this.state = 'barking';
 				},
+
+				skavurska: function(token) {
+					console.log('skavurska')
+				}
 			},
 		}
 	});

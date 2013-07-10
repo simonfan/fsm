@@ -1,4 +1,4 @@
-define(['buildable','eventemitter2','underscore','_.mixins'], function(Buildable, Eventemitter2, _, undef) {
+define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], function(Buildable, Eventemitter2, _, undef, Wildcards) {
 
 	//////////////////////////////////////////////
 	//////// DEFINE INTERNALLY USED METHODS //////
@@ -10,28 +10,23 @@ define(['buildable','eventemitter2','underscore','_.mixins'], function(Buildable
 	var fsm = {};
 
 	fsm.exec = function(methodName, args) {
-		var method = this.fsm('findMethod', this.state, methodName),
-			args = args || [];
 
-		if (typeof method === 'function') {
-			return method.apply(this, args) || this;
+		// retrieve the method
+		var methodExists = function(match) {
+				return typeof match.state[methodName] === 'function';
+			},
+			match = this.wildcards.retrieve(this.state, methodExists);
+
+		if (match) {
+			var args = args || [];
+			args.unshift(match.token);
+
+			console.log(args);
+			
+			return match.state[methodName].apply(this, args);
 		} else {
 			return false;
 		}
-	}
-
-	fsm.findMethod = function(stateName, methodName) {
-		var method,
-			state = this._states[ stateName ];
-
-		if (state) {
-			method = state[ methodName ];
-			method = method ? method : this._states['*'] ? this._states['*'][ methodName ] : undefined;
-		} else {
-			method = this._states['*'] ? this._states['*'][ methodName ] : undefined;
-		}
-
-		return method;
 	}
 
 	fsm.defineState = function(name, state) {
@@ -73,7 +68,8 @@ define(['buildable','eventemitter2','underscore','_.mixins'], function(Buildable
 			}
 		});
 
-		this._states[ stateName ] = _state;
+		// save the state object as a wildcard.
+		this.wildcards.card( stateName, _state);
 
 		return this;
 	}
@@ -101,6 +97,23 @@ define(['buildable','eventemitter2','underscore','_.mixins'], function(Buildable
 			this._states = {};
 			// state-methods
 			this._stateMethods = {};
+
+
+			// build the wildcard machine
+			/*
+				options: {
+					delimiter: ':',
+					token: '*',
+					tokenRegExp: /\*.* /,
+					itemAlias: 'item',
+					tokenAlias: 'tokens',
+					context: undefined
+				}
+			*/
+			this.wildcards = Wildcards.build(_.defaults({
+				itemAlias: 'state',
+			// 	tokenAlias: 'token',
+			}, data.wildcardOptions));
 
 			// define states
 			this.fsm('defineState', this.states );
