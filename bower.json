@@ -1,0 +1,11 @@
+{
+  "name": "fsm",
+  "version": "0.0.2",
+  "dependencies": {
+    "underscore-amd": "latest",
+    "requirejs": "latest",
+    "buildable": "simonfan/buildable",
+    "eventemitter2": "~0.4.11"
+  },
+  "main": "fsm.js"
+}
