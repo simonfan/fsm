@@ -21,17 +21,18 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 				var args = args || [],
 					token = match.token;
 
-				///////////////////////////////
-				/// SPECIAL METHOD: __token ///
-				///////////////////////////////
-				if (typeof match.state.__token === 'function') {
-					token = match.state.__token(token);
-				}
-
 				if (_.isArray(token)) {
 					args = token.concat(args);
 				} else {
 					args.unshift(token);
+				}
+
+				///////////////////////////////////
+				/// SPECIAL METHOD: __arguments ///
+				///////////////////////////////////
+				// run it only when the method called is not __arguments
+				if (methodName !== '__arguments' && typeof this.__arguments === 'function') {
+					args = this.__arguments(args);
 				}
 				
 				return match.state[methodName].apply(this, args);
@@ -122,6 +123,7 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 					delimiter: ':',
 					token: '*',
 					tokenRegExp: /\*.* /,
+					tokenDelimiter: '-',
 					itemAlias: 'item',
 					tokenAlias: 'tokens',
 					context: undefined
@@ -131,6 +133,7 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 			this._states = Wildcards.build(_.defaults({
 				itemAlias: 'state',
 			// 	tokenAlias: 'token',
+				tokenDelimiter: '-',
 			}, data.wildcardOptions));
 
 			// define states
