@@ -40,9 +40,9 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 
 			if (_.isArray(token)) {
 				// remove false values from token
-				_.compact(token);
+				token = _.compact(token);
 				args = token.concat(args);
-				
+
 			} else if (token != '') {
 				args.unshift(token);
 			}
