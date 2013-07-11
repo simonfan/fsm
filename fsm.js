@@ -10,35 +10,52 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 	var fsm = {
 
 		exec: function(methodName, args) {
+			// try the exact method name
+			var match = this.fsm('_retrieve', methodName),
+				special = methodName.match(/^__/);
 
-			// retrieve the method
-			var methodExists = function(match) {
-					return typeof match.state[methodName] === 'function';
-				},
-				match = this._states.retrieve(this.state, methodExists);
+			// only try to use the general method IF:
+			// 1: there is no exact method AND
+			// 2: the method is not a special method (identified by the '__' prefix)
+			if (!match && !special) {
+				// then try the general method name
+				methodName = '*';
+				match = this.fsm('_retrieve', methodName);
+			}
 
 			if (match) {
-				var args = args || [],
-					token = match.token;
-
-				if (_.isArray(token)) {
-					args = token.concat(args);
-				} else {
-					args.unshift(token);
-				}
-
-				///////////////////////////////////
-				/// SPECIAL METHOD: __arguments ///
-				///////////////////////////////////
-				// run it only when the method called is not __arguments
-				if (methodName !== '__arguments' && typeof this.__arguments === 'function') {
-					args = this.__arguments(args);
-				}
-				
-				return match.state[methodName].apply(this, args);
+				return this.fsm('_execMatch', match, methodName, args);
 			} else {
 				return false;
 			}
+		},
+
+		// run the match
+		_execMatch: function(match, methodName, args) {
+			var args = args || [],
+				token = match.token;
+
+			// transform args into array
+			args = _.isArray(args) ? args : [args];
+
+			if (_.isArray(token)) {
+				args = token.concat(args);
+			} else {
+				args.unshift(token);
+			}
+			
+			return match.state[methodName].apply(this, args);
+		},
+
+		// retrieve exact method for any of the states state[methodName] or *[methodName]
+		_retrieve: function(methodName) {
+			// retrieve the method
+			var exactMethodExists = function(match) {
+					return typeof match.state[methodName] === 'function';
+				},
+				match = this._states.retrieve(this.state, exactMethodExists);
+
+			return match;
 		},
 
 		defineState: function(name, state) {
@@ -73,10 +90,7 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 			// so that when it is called, we intercept it via .exec method
 			if (typeof this[ methodName ] === 'undefined') {
 
-				this[ methodName ] = this._stateMethods[ methodName ] = function() {
-					var args = _.args(arguments);
-					return this.fsm('exec', methodName, args);
-				};
+				this[ methodName ] = this._stateMethods[ methodName ] = this.fsm('_prepareMethod', methodName);
 
 			} else if ( !this._stateMethods[ methodName ] ) {
 				throw new Error('FSM: the property "'+ methodName +'" is already defined in the object. Please give the method another name.');
@@ -85,23 +99,27 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 			return method;
 		},
 
+		// _defineMethod helper, it wraps the exec method in a function
+		_prepareMethod: function(methodName) {
+			return function() {
+				var args = _.args(arguments);
+				return this.fsm('exec', methodName, args);
+			}
+		},
+
 		set: function(state) {
 			if (state === this.state) {
 				return false;
 			} else {
 				var args = _.args(arguments, 1);
-
+				
 				// call __leave
-				if (typeof this.__leave === 'function') {
-					this.__leave.apply(this, args);
-				}
+				this.fsm('exec', '__leave', args);
 
 				this.state = state;
 
 				// call __enter
-				if (typeof this.__enter === 'function') {
-					this.__enter.apply(this, args);
-				}
+				this.fsm('exec', '__enter', args);
 			}
 		},
 

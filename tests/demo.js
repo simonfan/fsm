@@ -32,10 +32,6 @@ define(['fsm'], function(FSM) {
 					return this;
 				},
 
-				__token: function(token) {
-					return token + 'PARSED!';
-				},
-
 				__enter: function() {
 					console.log('I started wagging my tail')
 				},
@@ -48,19 +44,19 @@ define(['fsm'], function(FSM) {
 			'wagging_tail:fast': {
 				pet: function() {
 					this.set('wagging_tail:slow');
-					console.log(this.state);
 				},
 			},
 
 			'wagging_tail:slow': {
 				pet: function() {
 					this.set('sitting');
-					console.log(this.state);
 				}
 			},
 
 			sitting: {
-
+				'*': function(state, arg1) {
+					console.log('I am sitting... do not know what to do with ' + arg1);
+				}
 			},
 
 			'*': {
@@ -70,7 +66,7 @@ define(['fsm'], function(FSM) {
 				},
 
 				squirrel: function(token) {
-					this.state = 'barking';
+					this.set('barking');
 				},
 
 				skavurska: function(token) {
