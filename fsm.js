@@ -152,14 +152,26 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 			this._stateMethods = {};
 			this._states = Wildcards.build(_.defaults({
 				itemAlias: 'state',
-			// 	tokenAlias: 'token',
-				tokenDelimiter: '-',
+			 	tokenAlias: 'token',
+			//	tokenDelimiter: '-',
 			}, data.wildcardOptions));
 
 			// define states
 			this.fsm('defineState', this.states );
 
-			this.state = data.initial || undefined;
+			///////////////////////////////////
+			// define initial state! //////////
+			///////////////////////////////////
+			var args = _.args(arguments);
+			this.state = this.initial.apply(this, args);
+		},
+
+		///////////////////////////////////////////
+		//// overwrite this method             ////
+		//// in order to set the initial state ////
+		///////////////////////////////////////////
+		initial: function(data) {
+			return data.initial;
 		},
 
 		exec: fsm.exec,
