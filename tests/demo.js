@@ -84,6 +84,12 @@ define(['fsm'], function(FSM) {
 
 
 
+	dog.on('changestate', function(state, dog) {
+		console.log('Dog has changed its state to ' + state);
+	})
+
+
+
 
 	// elstate
 	window.ElState = Object.create(FSM);

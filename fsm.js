@@ -121,6 +121,10 @@ define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], functi
 
 				this.state = state;
 
+				// emit 'changestate'
+				this.emit('changestate', this.state, this);
+				this.emit('changestate:'+ this.state, this);
+
 				// call __enter
 				this.fsm('exec', '__enter', args);
 			}
