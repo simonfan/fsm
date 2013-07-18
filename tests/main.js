@@ -4,8 +4,7 @@ require.config({
 	paths: {
 		// basic libraries
 		'jquery': 'components/jquery/jquery',
-		'underscore': 'components/underscore-amd/underscore',
-		'backbone': 'components/backbone-amd/backbone',
+		'underscore': 'components/underscore/underscore',
 
 		'eventemitter2': 'components/eventemitter2/lib/eventemitter2',
 

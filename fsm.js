@@ -1,4 +1,4 @@
-define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], function(Buildable, Eventemitter2, _, undef, Wildcards) {
+define(['buildable','eventemitter2','underscore','_.mixins','wildcards'], function(Buildable, Eventemitter2, undef , undef, Wildcards) {
 
 	//////////////////////////////////////////////
 	//////// DEFINE INTERNALLY USED METHODS //////
